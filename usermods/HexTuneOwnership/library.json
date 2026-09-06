@@ -1,0 +1,14 @@
+{
+  "name": "HexTuneOwnership",
+  "version": "1.0.0",
+  "description": "HexTune D1/S3 ownership GPIO monitor",
+  "keywords": [
+    "wled",
+    "hextune",
+    "esp32",
+    "ownership"
+  ],
+  "build": {
+    "libArchive": false
+  }
+}
