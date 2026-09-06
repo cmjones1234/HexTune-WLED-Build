@@ -1,0 +1,96 @@
+name: HexTune WLED Baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Download WLED
+        run: |
+          rm -rf /tmp/WLEDtemp
+          mkdir -p /tmp/WLEDtemp
+
+          wget \
+            https://api.github.com/repos/wled/WLED/zipball/nightly \
+            -O /tmp/WLEDtemp/wled.zip
+
+          unzip \
+            /tmp/WLEDtemp/wled.zip \
+            -d /tmp/WLEDtemp
+
+          find \
+            /tmp/WLEDtemp \
+            -maxdepth 1 \
+            -mindepth 1 \
+            -type d \
+            > /tmp/WLEDtemp/wledfoldername
+
+      - name: Configure WLED
+        run: |
+          WLEDFOLDERNAME=$(cat /tmp/WLEDtemp/wledfoldername)
+
+          cd "$WLEDFOLDERNAME"
+
+          npm install
+
+          echo '[env:custom_build]' \
+            >> platformio.ini
+
+          echo 'extends = env:esp32s3_4M_qspi' \
+            >> platformio.ini
+
+          echo 'build_flags = ${env:esp32s3_4M_qspi.build_flags} -D DATA_PINS=5 -D PIXEL_COUNTS=7' \
+            >> platformio.ini
+
+          echo 'build_unflags = -D WLED_RELEASE_NAME' \
+            >> platformio.ini
+
+      - name: Build WLED
+        run: |
+          WLEDFOLDERNAME=$(cat /tmp/WLEDtemp/wledfoldername)
+
+          cd "$WLEDFOLDERNAME"
+
+          pio run -e custom_build
+
+      - name: Copy firmware
+        run: |
+          WLEDFOLDERNAME=$(cat /tmp/WLEDtemp/wledfoldername)
+
+          cp \
+            "$WLEDFOLDERNAME/build_output/firmware/custom_build.bin" \
+            "$GITHUB_WORKSPACE/custom_build.bin"
+
+      - name: Commit firmware
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
+          git add custom_build.bin
+
+          git commit \
+            -m "Build HexTune WLED baseline" || true
+
+          git push
