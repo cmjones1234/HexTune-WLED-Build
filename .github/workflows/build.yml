@@ -47,7 +47,7 @@ jobs:
             -type d \
             > /tmp/WLEDtemp/wledfoldername
 
-      - name: Configure WLED
+            - name: Configure WLED
         run: |
           WLEDFOLDERNAME=$(cat /tmp/WLEDtemp/wledfoldername)
 
@@ -55,19 +55,13 @@ jobs:
 
           npm install
 
-          echo '[env:custom_build]' \
+                    echo '[env:custom_build]' \
             >> platformio.ini
 
           echo 'extends = env:esp32s3_4M_qspi' \
             >> platformio.ini
 
           echo 'build_flags = ${env:esp32s3_4M_qspi.build_flags} -D DATA_PINS=5 -D PIXEL_COUNTS=7' \
-            >> platformio.ini
-
-          echo 'custom_usermods = audioreactive' \
-            >> platformio.ini
-
-          echo 'custom_usermods = HexTuneOwnership' \
             >> platformio.ini
 
           echo 'build_unflags = -D WLED_RELEASE_NAME' \
